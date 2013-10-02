@@ -44,7 +44,7 @@ class MovingAverageStrategy(val days:Int) extends Strategy {
                 movingAverageQueue.add(stockDayTrade)
                 portfolioDownwardTrend.newValueUpward(stockDayTrade.close).buyStocks(cash) match {
                   case (newPortfolio, remainingCash) => {
-                    performStrategyAcc(newPortfolio, cash + remainingCash, tail)
+                    performStrategyAcc(newPortfolio, remainingCash, tail)
                   }
                 }
               }
@@ -72,7 +72,7 @@ class MovingAverageStrategy(val days:Int) extends Strategy {
               println("time to sell: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue)+ ", "+portfolio +", "+cash)
               movingAverageQueue.add(stockDayTrade)
               val newPortfolio = portfolioUpwardTrend.sellOff.newValueDownward(stockDayTrade.close)
-              performStrategyAcc(newPortfolio, cash + Cash(portfolioUpwardTrend.getAmount), tail)
+              performStrategyAcc(newPortfolio, cash + new Cash(portfolioUpwardTrend.getAmount), tail)
             }
             //downward trend. Let it be
             case portfolioDownwardTrend: DownwardTrend => {
