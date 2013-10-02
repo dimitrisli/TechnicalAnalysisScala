@@ -1,6 +1,6 @@
 package com.dimitrisli.scala.technicalAnalysis.strategies
 
-import com.dimitrisli.scala.technicalAnalysis.model.{StockDayTrade, Cash, Asset, Portfolio}
+import com.dimitrisli.scala.technicalAnalysis.model.{StockDayTrade, Cash}
 
 trait Strategy {
 

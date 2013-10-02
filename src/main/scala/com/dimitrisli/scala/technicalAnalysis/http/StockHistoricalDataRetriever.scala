@@ -40,6 +40,7 @@ class YahooPeriodBuilder {
   def build = new YahooStocksURL(this)
 }
 
+
 class YahooStocksURL(yahooPeriodBuilder: YahooPeriodBuilder){
 
   val id:Option[String] = yahooPeriodBuilder.id

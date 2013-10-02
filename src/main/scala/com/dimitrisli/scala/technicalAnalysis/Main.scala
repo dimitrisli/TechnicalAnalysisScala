@@ -18,8 +18,8 @@ object Main {
 
     val stockTimeSeries = StockHistoricalDataRetriever.fetch(url)
 
-    val myCash = new Cash(100)
+    val myCash = new Cash(1000)
 
-    print(new MovingAverageStrategy(30).performStrategy(myCash, stockTimeSeries))
+    print( MovingAverageStrategy(30).performStrategy(myCash, stockTimeSeries) )
   }
 }
