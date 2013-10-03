@@ -40,7 +40,6 @@ class YahooPeriodBuilder {
   def build = new YahooStocksURL(this)
 }
 
-
 class YahooStocksURL(yahooPeriodBuilder: YahooPeriodBuilder){
 
   val id:Option[String] = yahooPeriodBuilder.id
@@ -53,16 +52,16 @@ class YahooStocksURL(yahooPeriodBuilder: YahooPeriodBuilder){
   val interval:Option[String] = yahooPeriodBuilder.interval
 
   def getURL = "http://ichart.yahoo.com/table.csv?" +
-    TreeMap(ID.param -> id.getOrElse(""),
-            FROM_MONTH.param -> fromMonth.getOrElse(""),
-            FROM_DAY.param -> fromDay.getOrElse(""),
-            FROM_YEAR.param -> fromYear.getOrElse(""),
-            TO_MONTH.param -> toMonth.getOrElse(""),
-            TO_DAY.param -> toDay.getOrElse(""),
-            TO_YEAR.param -> toYear.getOrElse(""),
-            INTERVAL.param -> interval.getOrElse(""),
-            IGNORE.param -> ".csv")
-      .map(pair=>pair._1+"="+pair._2).mkString("&")
+                  TreeMap(ID.param -> id.getOrElse(""),
+                    FROM_MONTH.param -> fromMonth.getOrElse(""),
+                    FROM_DAY.param -> fromDay.getOrElse(""),
+                    FROM_YEAR.param -> fromYear.getOrElse(""),
+                    TO_MONTH.param -> toMonth.getOrElse(""),
+                    TO_DAY.param -> toDay.getOrElse(""),
+                    TO_YEAR.param -> toYear.getOrElse(""),
+                    INTERVAL.param -> interval.getOrElse(""),
+                    IGNORE.param -> ".csv")
+                  .map(pair=>pair._1+"="+pair._2).mkString("&")
 }
 
 
@@ -73,7 +72,7 @@ object StockHistoricalDataRetriever {
 
   def fetch(url:String):List[StockDayTrade] = {
     val stocks = ListBuffer[StockDayTrade]()
-    for (dailyNAV <- Source.fromURL(url).getLines().drop(1)){
+    for (dailyNAV <- Source.fromURL(url).getLines().drop(1)) {
       dailyNAV.split(",") match {
         case Array(date,_,_,_,close,volume,_) =>  {
           date.split("-") match {

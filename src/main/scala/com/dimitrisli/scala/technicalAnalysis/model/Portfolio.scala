@@ -12,9 +12,9 @@ case class Portfolio (val stockSymbol:String, val volume:Int, value:Double) exte
 
   def sellOff = new Portfolio(stockSymbol, 0, value)
 
-  def buyStocks(cash:Cash) =  {
+  def buyStocks(cash:Cash) = {
     val noStocks = (cash.getAmount / value).toInt
     val cashRemainder = new Cash(if(noStocks == 0) 0 else NumberUtils.roundDouble(cash.getAmount % value))
-    ( new Portfolio(stockSymbol, noStocks, value) with UpwardTrend,  cashRemainder )
+    ( new Portfolio(stockSymbol, noStocks, value) with UpwardTrend, cashRemainder )
   }
 }

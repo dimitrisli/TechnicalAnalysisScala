@@ -5,7 +5,9 @@ import com.google.common.collect.EvictingQueue
 import com.dimitrisli.scala.technicalAnalysis.model.StockDayTrade
 import com.dimitrisli.scala.technicalAnalysis.model.Cash
 import com.dimitrisli.scala.technicalAnalysis.model.Portfolio
-import com.dimitrisli.scala.technicalAnalysis.utils.MAUtils
+import com.dimitrisli.scala.technicalAnalysis.utils.{NumberUtils, MAUtils}
+
+
 
 class MovingAverageStrategy(val days:Int) extends Strategy {
 
@@ -17,8 +19,8 @@ class MovingAverageStrategy(val days:Int) extends Strategy {
       stockInRemainingPeriodRange match {
 
         //finished processing timeseries
-        case _::Nil => {
-          println("done. "+portfolio+", "+cash)
+        case lastStockDayTrade::Nil => {
+          println(s"${lastStockDayTrade.date}, done. ${portfolio}, ${cash}")
           portfolio.getAmount + cash.getAmount
         }
 
@@ -31,34 +33,37 @@ class MovingAverageStrategy(val days:Int) extends Strategy {
         //above MA
         case stockDayTrade::tail
           if(MAUtils.avg(movingAverageQueue) < stockDayTrade.close) => {
-            portfolio match {
-              //upward trend. keep it up
-              case portfolioUpwardTrend: UpwardTrend =>  {
-                println("upward trend: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
-                movingAverageQueue.add(stockDayTrade)
-                performStrategyAcc(portfolioUpwardTrend.newValueUpward(stockDayTrade.close), cash, tail)
-              }
-              //time to buy
-              case portfolioDownwardTrend: DownwardTrend => {
-                println("time to buy: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
-                movingAverageQueue.add(stockDayTrade)
-                portfolioDownwardTrend.newValueUpward(stockDayTrade.close).buyStocks(cash) match {
-                  case (newPortfolio, remainingCash) => {
-                    performStrategyAcc(newPortfolio, remainingCash, tail)
-                  }
-                }
-              }
-              //starting up. Let's buy some stocks
-              case _ => {
-                println("starting up: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
-                movingAverageQueue.add(stockDayTrade)
-                portfolio.newValueUpward(stockDayTrade.close).buyStocks(cash) match {
-                  case (newPortfolio, remainingCash) => {
-                    performStrategyAcc(newPortfolio, remainingCash, tail)
-                  }
+          portfolio match {
+            //upward trend. keep it up
+            case portfolioUpwardTrend: UpwardTrend => {
+              //println(stockDayTrade.date +", "+"upward trend: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
+              println(s"${stockDayTrade.date}, upward trend: s:${stockDayTrade.close}, MA:${MAUtils.avg(movingAverageQueue)}, ${portfolio}, ${cash}")
+              movingAverageQueue.add(stockDayTrade)
+              performStrategyAcc(portfolioUpwardTrend.newValueUpward(stockDayTrade.close), cash, tail)
+            }
+            //time to buy
+            case portfolioDownwardTrend: DownwardTrend => {
+              //println(stockDayTrade.date +", "+"time to buy: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
+              println(s"${stockDayTrade.date}, time to buy: s:${stockDayTrade.close}, MA:${MAUtils.avg(movingAverageQueue)}, ${portfolio}, ${cash}")
+              movingAverageQueue.add(stockDayTrade)
+              portfolioDownwardTrend.newValueUpward(stockDayTrade.close).buyStocks(cash) match {
+                case (newPortfolio, remainingCash) => {
+                  performStrategyAcc(newPortfolio, remainingCash, tail)
                 }
               }
             }
+            //starting up. Let's buy some stocks
+            case _ => {
+              //println(stockDayTrade.date +", "+"starting up: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
+              println(s"${stockDayTrade.date}, time to buy: s:${stockDayTrade.close}, MA:${MAUtils.avg(movingAverageQueue)}, ${portfolio}, ${cash}")
+              movingAverageQueue.add(stockDayTrade)
+              portfolio.newValueUpward(stockDayTrade.close).buyStocks(cash) match {
+                case (newPortfolio, remainingCash) => {
+                  performStrategyAcc(newPortfolio, remainingCash, tail)
+                }
+              }
+            }
+          }
 
         }
 
@@ -68,27 +73,26 @@ class MovingAverageStrategy(val days:Int) extends Strategy {
 
           portfolio match {
             //time to sell
-            case portfolioUpwardTrend: UpwardTrend =>  {
-              println("time to sell: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue)+ ", "+portfolio +", "+cash)
+            case portfolioUpwardTrend: UpwardTrend => {
+              //println(stockDayTrade.date +", "+ "time to sell: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue)+ ", "+portfolio +", "+cash)
+              println(s"${stockDayTrade.date}, time to sell: s:${stockDayTrade.close}, MA:${MAUtils.avg(movingAverageQueue)}, ${portfolio}, ${cash}")
               movingAverageQueue.add(stockDayTrade)
-              val newPortfolio = portfolioUpwardTrend.sellOff.newValueDownward(stockDayTrade.close)
-              performStrategyAcc(newPortfolio, cash + new Cash(portfolioUpwardTrend.getAmount), tail)
+              val newPortfolio = portfolioUpwardTrend.newValueDownward(stockDayTrade.close)
+              performStrategyAcc(newPortfolio.sellOff, cash + new Cash(NumberUtils.roundDouble(newPortfolio.getAmount)), tail)
             }
             //downward trend. Let it be
             case portfolioDownwardTrend: DownwardTrend => {
-              println("downward trend: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue)+ ", "+portfolio +", "+cash)
+              //println(stockDayTrade.date +", "+"downward trend: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue)+ ", "+portfolio +", "+cash)
+              println(s"${stockDayTrade.date}, downward trend: s:${stockDayTrade.close}, MA:${MAUtils.avg(movingAverageQueue)}, ${portfolio}, ${cash}")
               movingAverageQueue.add(stockDayTrade)
               performStrategyAcc(portfolioDownwardTrend.newValueDownward(stockDayTrade.close), cash, tail)
             }
             //starting up. Let's buy some stocks
             case _ => {
-              println("starting up: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
+              //println(stockDayTrade.date +", "+"should be out: "+"s:"+stockDayTrade.close+", MA:" + MAUtils.avg(movingAverageQueue) + ", "+portfolio +", "+cash)
+              println(s"${stockDayTrade.date}, should be out: s:${stockDayTrade.close}, MA:${MAUtils.avg(movingAverageQueue)}, ${portfolio}, ${cash}")
               movingAverageQueue.add(stockDayTrade)
-              portfolio.newValueUpward(stockDayTrade.close).buyStocks(cash) match {
-                case (newPortfolio, remainingCash) => {
-                  performStrategyAcc(newPortfolio, remainingCash, tail)
-                }
-              }
+              performStrategyAcc(portfolio.newValue(stockDayTrade.close), cash, tail)
             }
           }
         }
